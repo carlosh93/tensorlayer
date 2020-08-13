@@ -157,10 +157,11 @@ def make_layers(config, batch_norm=False, end_with='outputs'):
 def restore_model(model, layer_type):
     logging.info("Restore pre-trained weights")
     # download weights
-    maybe_download_and_extract(model_saved_name[layer_type], 'models', model_urls[layer_type])
+    GCS_BUCKET = os.getenv('BUCKET')
+    maybe_download_and_extract(model_saved_name[layer_type], GCS_BUCKET, model_urls[layer_type])
     weights = []
     if layer_type == 'vgg16':
-        npz = np.load(os.path.join('models', model_saved_name[layer_type]), allow_pickle=True)
+        npz = np.load(os.path.join(GCS_BUCKET, model_saved_name[layer_type]), allow_pickle=True)
         # get weight list
         for val in sorted(npz.items()):
             logging.info("  Loading weights %s in %s" % (str(val[1].shape), val[0]))
@@ -168,7 +169,7 @@ def restore_model(model, layer_type):
             if len(model.all_weights) == len(weights):
                 break
     elif layer_type == 'vgg19':
-        npz = np.load(os.path.join('models', model_saved_name[layer_type]), allow_pickle=True, encoding='latin1').item()
+        npz = np.load(os.path.join(GCS_BUCKET, model_saved_name[layer_type]), allow_pickle=True, encoding='latin1').item()
         # get weight list
         for val in sorted(npz.items()):
             logging.info("  Loading %s in %s" % (str(val[1][0].shape), val[0]))
