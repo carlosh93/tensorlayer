@@ -154,14 +154,13 @@ def make_layers(config, batch_norm=False, end_with='outputs'):
     return LayerList(layer_list)
 
 
-def restore_model(model, layer_type):
+def restore_model(model, layer_type, working_dir='models'):
     logging.info("Restore pre-trained weights")
     # download weights
-    GCS_BUCKET = os.getenv('BUCKET')
-    maybe_download_and_extract(model_saved_name[layer_type], GCS_BUCKET, model_urls[layer_type])
+    maybe_download_and_extract(model_saved_name[layer_type], working_dir, model_urls[layer_type])
     weights = []
     if layer_type == 'vgg16':
-        npz = np.load(os.path.join(GCS_BUCKET, model_saved_name[layer_type]), allow_pickle=True)
+        npz = np.load(os.path.join(working_dir, model_saved_name[layer_type]), allow_pickle=True)
         # get weight list
         for val in sorted(npz.items()):
             logging.info("  Loading weights %s in %s" % (str(val[1].shape), val[0]))
@@ -169,7 +168,7 @@ def restore_model(model, layer_type):
             if len(model.all_weights) == len(weights):
                 break
     elif layer_type == 'vgg19':
-        npz = np.load(os.path.join(GCS_BUCKET, model_saved_name[layer_type]), allow_pickle=True, encoding='latin1').item()
+        npz = np.load(os.path.join(working_dir, model_saved_name[layer_type]), allow_pickle=True, encoding='latin1').item()
         # get weight list
         for val in sorted(npz.items()):
             logging.info("  Loading %s in %s" % (str(val[1][0].shape), val[0]))
@@ -259,7 +258,7 @@ def vgg16(pretrained=False, end_with='outputs', mode='dynamic', name=None):
     return model
 
 
-def vgg19(pretrained=False, end_with='outputs', mode='dynamic', name=None):
+def vgg19(pretrained=False, end_with='outputs', mode='dynamic', working_dir='models', name=None):
     """Pre-trained VGG19 model.
 
     Parameters
@@ -317,7 +316,7 @@ def vgg19(pretrained=False, end_with='outputs', mode='dynamic', name=None):
     else:
         raise Exception("No such mode %s" % mode)
     if pretrained:
-        restore_model(model, layer_type='vgg19')
+        restore_model(model, layer_type='vgg19', working_dir=working_dir)
     return model
 
 
